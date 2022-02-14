@@ -1,0 +1,37 @@
+h1 {
+    text-align: center;
+    color: #2F4F4F;
+    margin-top: 30px;
+}
+
+body {
+    background-color: #FFFAF0;
+}
+
+.card-group {
+    margin: 40px;
+    padding: 50px;
+    display: flex;
+}
+
+.card-img-top {
+    height: 60%;
+}
+
+.card-body {
+    text-align: center;
+}
+
+.user_img {
+  margin-top: 50px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  height:150px;
+}
+
+/*
+.col-4 {
+    padding: 50px;
+}
+*/

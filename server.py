@@ -1,12 +1,27 @@
+import pymongo
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from pymongo import MongoClient
+
+# global constants
+NUM_POSITIONS = 3       # number of positions to shift characters in a user's password
+DATABASE_PASSWORD = "Lalakers2324"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+# user_db_password = 'G6zaqxfrbylpiTda'
+
+# create client object database
+client = MongoClient(f"mongodb+srv://ee461LTeamGroup1:<{DATABASE_PASSWORD}>@usermanagement.zcdlh.mongodb.net/test?retryWrites=true&w=majority")
+projectdb =  client['projectdb']
+
+user_manager = projectdb['users']
+project_manager = projectdb['projects']
+hardware_manager = projectdb['hardware']
 
 
 class LoginForm(FlaskForm):
@@ -15,27 +30,27 @@ class LoginForm(FlaskForm):
     submit = SubmitField(label='Log in')
 
 
-# def customEncrypt(plain_text, num_positions, direction):
-#     encrypted_text = list(plain_text)[::-1]
-#
-#     for i in range(len(encrypted_text)):
-#         curr_ascii_val = ord(encrypted_text[i])  # store ascii value
-#
-#         if direction == 1:  # add
-#             new_ascii_val = (curr_ascii_val + num_positions) % 127
-#             if new_ascii_val < curr_ascii_val:  # take care of values less than 34
-#                 new_ascii_val += 34
-#         else:  # subtract
-#             new_ascii_val = curr_ascii_val - num_positions
-#             if new_ascii_val < 34:  # take care of values less than 34
-#                 new_ascii_val += 93
-#
-#         new_letter = chr(new_ascii_val)
-#         encrypted_text[i] = new_letter
-#
-#     result = ''.join(encrypted_text)  # convert result (list) into string
-#
-#     return result
+def custom_encrypt(plain_text, direction):
+    global NUM_POSITIONS
+    encrypted_text = list(plain_text)[::-1]
+
+    for i in range(len(encrypted_text)):
+        curr_ascii_val = ord(encrypted_text[i])  # store ascii value
+
+        if direction == 1:  # add
+            new_ascii_val = (curr_ascii_val + NUM_POSITIONS) % 127
+            if new_ascii_val < curr_ascii_val:  # take care of values less than 34
+                new_ascii_val += 34
+        else:  # subtract
+            new_ascii_val = curr_ascii_val - NUM_POSITIONS
+            if new_ascii_val < 34:  # take care of values less than 34
+                new_ascii_val += 93
+
+        new_letter = chr(new_ascii_val)
+        encrypted_text[i] = new_letter
+
+    result = ''.join(encrypted_text)  # convert result (list) into string
+    return result
 
 
 @app.route('/')
@@ -49,8 +64,14 @@ def login():
     if request.method == "POST":
         userid = form.userid.data       # stores userID entered by user
         password = form.password.data   # stores password entered by user
-        # need to encrypt password using customEncrypt
-        print(userid, password)
+        encrypted_password = custom_encrypt(password, 1)    # need to encrypt password using customEncrypt
+
+        # put userID and encrypted password into projectdb (users)
+        post = {'userID': userid, 'password': encrypted_password}
+        print(post)
+        # user_manager.insert_one(post)
+        # return redirect(url_for('home'))
+
     return render_template('login.html', form=form)
 
 

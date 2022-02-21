@@ -64,19 +64,35 @@ def login():
     if request.method == "POST":
         userid = form.userid.data       # stores userID entered by user
         password = form.password.data   # stores password entered by user
-        encrypted_password = custom_encrypt(password, 1)    # need to encrypt password using customEncrypt
+        # need to check if username and password exists in database
+        decrypted_password = custom_encrypt(password, -1)
+        result = user_manager.find_one({"userID":userid, "password":decrypted_password})
+        if not result:
+            print("The username or password you entered is incorrect.")
+            # return redirect(url_for(login))
+        else:
+            # log in the user
+            return redirect(url_for('home'))
 
-        # put userID and encrypted password into projectdb (users)
-        post = {'userID': userid, 'password': encrypted_password}
-        print(post)
-        # user_manager.insert_one(post)
-        # return redirect(url_for('home'))
+
 
     return render_template('login.html', form=form)
 
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    # form = RegisterForm()     # make register form class
+    # if request.method == "POST":
+    #     userid = form.userid.data  # stores userID entered by user
+    #     password = form.password.data  # stores password entered by user
+    #     encrypted_password = custom_encrypt(password, 1)    # encrypt the password entered by user
+    #
+    #     # put userID and encrypted password into projectdb (users)
+    #     post = {'userID': userid, 'password': encrypted_password}
+    #     print(post)
+    #     # user_manager.insert_one(post)
+    #     # return redirect(url_for('home'))
+
     return render_template('register.html')
 
 

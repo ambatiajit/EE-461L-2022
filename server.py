@@ -1,4 +1,3 @@
-import pymongo
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
@@ -6,22 +5,21 @@ from wtforms.validators import DataRequired, Email, Length
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
+import certifi
 
-# global constants
 NUM_POSITIONS = 3       # number of positions to shift characters in a user's password
-DATABASE_PASSWORD = "Lalakers2324"
+DATABASE_PASSWORD = "kltlFKZqaaj4jZCX"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
-# user_db_password = 'G6zaqxfrbylpiTda'
 
 # create client object database
-client = MongoClient(f"mongodb+srv://ee461LTeamGroup1:<{DATABASE_PASSWORD}>@usermanagement.zcdlh.mongodb.net/test?retryWrites=true&w=majority")
-projectdb =  client['projectdb']
-
-user_manager = projectdb['users']
-project_manager = projectdb['projects']
-hardware_manager = projectdb['hardware']
+client = MongoClient(f"mongodb+srv://teamMember:{DATABASE_PASSWORD}@usermanagement.zcdlh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&tlsCAFile={certifi.where()}")
+projectdb = client['projectdb']
+user_manager = projectdb['Users']
+project_manager = projectdb['Projects']
+hardware_manager = projectdb['HWSet']
+print(projectdb.list_collection_names())
 
 
 class LoginForm(FlaskForm):

@@ -16,6 +16,7 @@ app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 # create client object database
 client = MongoClient(f"mongodb+srv://teamMember:{DATABASE_PASSWORD}@usermanagement.zcdlh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&tlsCAFile={certifi.where()}")
 projectdb = client['projectdb']
+# Make 3 separte collections within the project database: user, project, and hardware
 user_manager = projectdb['Users']
 project_manager = projectdb['Projects']
 hardware_manager = projectdb['HWSet']
@@ -26,6 +27,13 @@ class LoginForm(FlaskForm):
     userid = StringField(label='userID', validators=[DataRequired()])
     password = PasswordField(label='password', validators=[DataRequired(), Length(min=8)])
     submit = SubmitField(label='Log in')
+
+class RegisterForm(FlaskForm):
+    fname = StringField(label='First name', validators=[DataRequired()])
+    lname = StringField(label='Last name', validators=[DataRequired()])
+    userid = StringField(label='userID', validators=[DataRequired()])
+    password = PasswordField(label='password', validators=[DataRequired()])
+    submit = SubmitField(label='Sign up')
 
 
 def custom_encrypt(plain_text, direction):
@@ -79,19 +87,27 @@ def login():
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
-    # form = RegisterForm()     # make register form class
-    # if request.method == "POST":
-    #     userid = form.userid.data  # stores userID entered by user
-    #     password = form.password.data  # stores password entered by user
-    #     encrypted_password = custom_encrypt(password, 1)    # encrypt the password entered by user
-    #
-    #     # put userID and encrypted password into projectdb (users)
-    #     post = {'userID': userid, 'password': encrypted_password}
-    #     print(post)
-    #     # user_manager.insert_one(post)
-    #     # return redirect(url_for('home'))
+     form = RegisterForm()     # make register form class
+     if request.method == "POST":
+         fname = form.fname.data    # stores first name entered by user
+         lname = form.lname.data    # stores last name entered by user
+         userid = form.userid.data  # stores userID entered by user
+         password = form.password.data  # stores password entered by user
+         encrypted_password = custom_encrypt(password, 1)    # encrypt the password entered by user
 
-    return render_template('register.html')
+         # put user's information into MongoDB database
+         post = {'first_name':fname,
+                 'last_name':lname,
+                 'userID': userid,
+                 'pwd': password,
+                 'encr_pwd': encrypted_password}
+
+         print(post)
+         print(password == custom_encrypt(encrypted_password, -1))
+         user_manager.insert_one(post)
+         return redirect(url_for('home'))
+
+     return render_template('register.html', form=form)
 
 
 @app.route('/resources')

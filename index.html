@@ -1,7 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% if logged_in: %}
+<h1>Welcome, NAME OF USER</h1>
+{% else: %}
 <h1>Welcome!</h1>
+{% endif %}
+
 
 <div class="card-group">
   <div class="card">

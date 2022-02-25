@@ -39,3 +39,11 @@ body {
     text-align: center;
     color: #2F4F4F;
 }
+
+.error_message {
+    margin-top: 50px;
+    text-align: center;
+    color: red;
+    letter-spacing: 3px;
+    word-spacing: 5px;
+}

@@ -6,12 +6,25 @@ from flask_login import UserMixin, login_user, LoginManager, current_user, logou
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
 import certifi
+from user import User
 
 NUM_POSITIONS = 3       # number of positions to shift characters in a user's password
 DATABASE_PASSWORD = "kltlFKZqaaj4jZCX"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+
+# create a login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user):
+    # print(f"The current user is {user}.")
+    # print(user['first_name'], user['last_name'])
+    return user_manager.find_one(user)
+    # return db.session.query(User).get(int(user_id))
 
 # create client object database
 client = MongoClient(f"mongodb+srv://teamMember:{DATABASE_PASSWORD}@usermanagement.zcdlh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&tlsCAFile={certifi.where()}")
@@ -20,13 +33,13 @@ projectdb = client['projectdb']
 user_manager = projectdb['Users']
 project_manager = projectdb['Projects']
 hardware_manager = projectdb['HWSet']
-print(projectdb.list_collection_names())
 
 
 class LoginForm(FlaskForm):
     userid = StringField(label='userID', validators=[DataRequired()])
-    password = PasswordField(label='password', validators=[DataRequired(), Length(min=8)])
+    password = PasswordField(label='password', validators=[DataRequired()])
     submit = SubmitField(label='Log in')
+
 
 class RegisterForm(FlaskForm):
     fname = StringField(label='First name', validators=[DataRequired()])
@@ -61,7 +74,7 @@ def custom_encrypt(plain_text, direction):
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('index.html', logged_in=current_user.is_authenticated)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -70,19 +83,26 @@ def login():
     if request.method == "POST":
         userid = form.userid.data       # stores userID entered by user
         password = form.password.data   # stores password entered by user
+
         # need to check if username and password exists in database
-        decrypted_password = custom_encrypt(password, -1)
-        result = user_manager.find_one({"userID":userid, "password":decrypted_password})
-        if not result:
-            print("The username or password you entered is incorrect.")
-            # return redirect(url_for(login))
+        encrypted_password = custom_encrypt(password, 1)
+        user = user_manager.find_one({"userID": userid})
+
+        # user does not exist or password entered is incorrect
+        if not user or user['encr_pwd'] != encrypted_password:
+            error = "The username or password you entered is incorrect."
+            flash(error)
+            return redirect(url_for('login'))
+
+        # user exists --> login user
         else:
-            # log in the user
+            # user_to_login = User()
+            # user_to_login.id = user['userID']
+            # login_user(user_to_login)
+            print(f"Welcome, {user['first_name']} {user['last_name']}!")
             return redirect(url_for('home'))
 
-
-
-    return render_template('login.html', form=form)
+    return render_template('login.html', form=form, logged_in=current_user.is_authenticated)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -107,7 +127,7 @@ def register():
          user_manager.insert_one(post)
          return redirect(url_for('home'))
 
-     return render_template('register.html', form=form)
+     return render_template('register.html', form=form, logged_in=current_user.is_authenticated)
 
 
 @app.route('/resources')
@@ -123,6 +143,12 @@ def projects():
 @app.route('/data_access')
 def data_access():
     return render_template('data_access.html')
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
 
 
 if __name__ == '__main__':

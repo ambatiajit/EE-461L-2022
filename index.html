@@ -2,7 +2,7 @@
 {% block content %}
 
 {% if logged_in: %}
-<h1>Welcome, NAME OF USER</h1>
+<h1>Welcome, {{ session['first_name'] }}!</h1>
 {% else: %}
 <h1>Welcome!</h1>
 {% endif %}

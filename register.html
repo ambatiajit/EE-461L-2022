@@ -4,8 +4,8 @@
 <h1>Register</h1>
 <img src="static/images/register.jpeg" alt="Register" class="user_img">
 <form action="{{ url_for('register') }}", method="post", class="login_form">
-    <p> {{form.fname(size=32, placeholder='FName')}} <br></p>
-    <p> {{form.lname(size=32, placeholder='LName')}} <br></p>
+    <p> {{form.fname(size=32, placeholder='First Name')}} <br></p>
+    <p> {{form.lname(size=32, placeholder='Last Name')}} <br></p>
     <p> {{form.userid(size=32, placeholder='userID')}} <br></p>
     <p> {{form.password(size=32, placeholder='password')}} <br></p>
     <p> {{ form.submit() }} </p>

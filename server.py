@@ -1,12 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
-from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user
-from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
 import certifi
-from user import User
 
 NUM_POSITIONS = 3       # number of positions to shift characters in a user's password
 DATABASE_PASSWORD = "kltlFKZqaaj4jZCX"
@@ -14,22 +11,11 @@ DATABASE_PASSWORD = "kltlFKZqaaj4jZCX"
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 
-# create a login manager
-login_manager = LoginManager()
-login_manager.init_app(app)
-
-
-@login_manager.user_loader
-def load_user(user):
-    # print(f"The current user is {user}.")
-    # print(user['first_name'], user['last_name'])
-    return user_manager.find_one(user)
-    # return db.session.query(User).get(int(user_id))
-
 # create client object database
 client = MongoClient(f"mongodb+srv://teamMember:{DATABASE_PASSWORD}@usermanagement.zcdlh.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&tlsCAFile={certifi.where()}")
 projectdb = client['projectdb']
-# Make 3 separte collections within the project database: user, project, and hardware
+
+# store the 3 separate collections within the project database in 3 different variables
 user_manager = projectdb['Users']
 project_manager = projectdb['Projects']
 hardware_manager = projectdb['HWSet']
@@ -74,15 +60,16 @@ def custom_encrypt(plain_text, direction):
 
 @app.route('/')
 def home():
-    return render_template('index.html', logged_in=current_user.is_authenticated)
+    logged_in = is_logged_in()
+    return render_template('index.html', logged_in=logged_in)
 
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
     form = LoginForm()
     if request.method == "POST":
-        userid = form.userid.data       # stores userID entered by user
-        password = form.password.data   # stores password entered by user
+        userid = form.userid.data           # stores userID entered by user
+        password = form.password.data       # stores password entered by user
 
         # need to check if username and password exists in database
         encrypted_password = custom_encrypt(password, 1)
@@ -96,13 +83,10 @@ def login():
 
         # user exists --> login user
         else:
-            # user_to_login = User()
-            # user_to_login.id = user['userID']
-            # login_user(user_to_login)
-            print(f"Welcome, {user['first_name']} {user['last_name']}!")
+            login_user(user['userID'], user['first_name'], user['last_name'])
             return redirect(url_for('home'))
 
-    return render_template('login.html', form=form, logged_in=current_user.is_authenticated)
+    return render_template('login.html', form=form)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -115,40 +99,58 @@ def register():
          password = form.password.data  # stores password entered by user
          encrypted_password = custom_encrypt(password, 1)    # encrypt the password entered by user
 
-         # put user's information into MongoDB database
+         # put user's information into MongoDB database & log in the user
          post = {'first_name':fname,
                  'last_name':lname,
                  'userID': userid,
                  'pwd': password,
                  'encr_pwd': encrypted_password}
 
-         print(post)
-         print(password == custom_encrypt(encrypted_password, -1))
          user_manager.insert_one(post)
+         login_user(userid, fname, lname)
          return redirect(url_for('home'))
 
-     return render_template('register.html', form=form, logged_in=current_user.is_authenticated)
+     return render_template('register.html', form=form)
 
 
 @app.route('/resources')
 def resources():
-    return render_template('resources.html')
+    logged_in = is_logged_in()
+
+    return render_template('resources.html', logged_in=logged_in)
 
 
 @app.route('/projects')
 def projects():
-    return render_template('projects.html')
+    logged_in = is_logged_in()
+
+    return render_template('projects.html', logged_in=logged_in)
 
 
 @app.route('/data_access')
 def data_access():
-    return render_template('data_access.html')
+    logged_in = is_logged_in()
+
+    return render_template('data_access.html', logged_in=logged_in)
 
 
 @app.route('/logout')
 def logout():
-    logout_user()
+    session.clear()                     # clear the current session and logout the user
     return redirect(url_for('home'))
+
+
+""" This method logs in a user by setting the properties of session """
+def login_user(userid, fname, lname):
+    session['userID'] = userid
+    session['first_name'] = fname
+    session['last_name'] = lname
+
+
+def is_logged_in():
+    if 'userID' in session:
+        return True
+    return False
 
 
 if __name__ == '__main__':

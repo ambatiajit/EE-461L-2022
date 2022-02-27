@@ -3,6 +3,15 @@
 
 <h1>Register</h1>
 <img src="static/images/register.jpeg" alt="Register" class="user_img">
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p class="error_message"><strong>{{ message }}</strong></p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
 <form action="{{ url_for('register') }}", method="post", class="login_form">
     <p> {{form.fname(size=32, placeholder='First Name')}} <br></p>
     <p> {{form.lname(size=32, placeholder='Last Name')}} <br></p>

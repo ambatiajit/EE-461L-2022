@@ -99,12 +99,24 @@ def register():
          password = form.password.data  # stores password entered by user
          encrypted_password = custom_encrypt(password, 1)    # encrypt the password entered by user
 
+         # check for invalid characters in userid and password ('!' and ' ')
+         if ' ' in userid or '!' in userid:
+             error = "Passwords cannot contain '!' or ' '."
+             flash(error)
+             return redirect(url_for('register'))
+
+         if ' ' in password or '!' in password:
+             error = "Passwords cannot contain '!' or ' '."
+             flash(error)
+             return redirect(url_for('register'))
+
          # put user's information into MongoDB database & log in the user
          post = {'first_name':fname,
                  'last_name':lname,
                  'userID': userid,
-                 'pwd': password,
-                 'encr_pwd': encrypted_password}
+                 'encr_pwd': encrypted_password,                # only store encrypted password in database
+                 'resources': {'HWSet1': 0, 'HWSet2': 0},       # initially has 0 resources
+                 'projects': []}                                # array that contains projectIDs, initially empty
 
          user_manager.insert_one(post)
          login_user(userid, fname, lname)

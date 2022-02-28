@@ -16,6 +16,7 @@
     <p> {{form.userid(size=32, placeholder='userID')}} <br></p>
     <p> {{form.password(size=32, placeholder='password')}} <br></p>
     <p> {{ form.submit() }} </p>
+    <p> New User? <a href="{{ url_for('register') }}" style="color:#FF4500">Join Now</a> </p>
 </form>
 
 {% endblock %}

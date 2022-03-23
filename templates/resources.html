@@ -3,13 +3,59 @@
 
 
 {% if not logged_in: %}
+
 <h1>Please login before accessing HW sets</h1>
 <img src="static/images/please_login.png" alt="hello-world" class="user_img">
+
 {% else: %}
+
 <h1>Resources</h1>
-<!--Continue HTML here -->
+
+<img src="static/images/resources.png" alt="Resources" class="user_img">
+<br>
+
+<br>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p class="error_message"> <strong> {{ message }} </strong> </p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Can store images associated with HWSets in db later -->
+<!-- Fetching and displaying should be simple -->
+{%for document in hardware_manager.find({}):%}
+    <div class="card-group"></div>
+        <div class="card">
+            <h3 class="card-title">{{document["Name"]}}</h3>
+            <p class="card-text">Capacity: {{document["Capacity"]}}</p>
+            <p class="card-text">Availability: {{document["Availability"]}}</p>
+
+        </div>
+    </div>
+{%endfor%}
+
+<form action="{{ url_for('resources') }}", method="post", class="check_out_form">
+    <h2>Check In/Out Sets: </h2>
+    <p>{{ check_in_out_form.hidden_tag() }}</p>
+    <p>
+        Checking in?:  
+        {{ check_in_out_form.in_out() }}
+        (Leave un-checked to check out)
+    </p>
+    <p>
+        Set Name:  
+        {{check_in_out_form.item(size=32, placeholder='set name')}}
+    </p>
+    <p>
+        Quantity:  
+        {{check_in_out_form.quantity(size=32, placeholder='quantity')}}
+    </p>
+    <p> {{ check_in_out_form.submit() }} </p>
+</form>
 
 {% endif %}
-
 
 {% endblock %}

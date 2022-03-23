@@ -46,4 +46,18 @@ body {
     color: red;
     letter-spacing: 3px;
     word-spacing: 5px;
+    animation: opacity 1s ease-in-out infinite alternate;
+    opacity: 1;
 }
+
+  @keyframes opacity {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5
+    }
+    100% {
+      opacity: 0;
+    }
+  }

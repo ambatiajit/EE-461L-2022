@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from matplotlib.style import available
+from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Email, Length
 from pymongo import MongoClient
 import certifi
@@ -34,6 +35,11 @@ class RegisterForm(FlaskForm):
     password = PasswordField(label='password', validators=[DataRequired()])
     submit = SubmitField(label='Sign up')
 
+class CheckInOutForm(FlaskForm):
+    item = StringField(label='Item name', validators=[DataRequired()])
+    quantity = StringField(label='Quantity', validators=[DataRequired()])
+    in_out = BooleanField(label = "In or out")
+    submit = SubmitField(label='Submit')
 
 def custom_encrypt(plain_text, direction):
     global NUM_POSITIONS
@@ -125,11 +131,67 @@ def register():
      return render_template('register.html', form=form)
 
 
-@app.route('/resources')
+@app.route('/resources', methods=["GET", "POST"])
 def resources():
     logged_in = is_logged_in()
 
-    return render_template('resources.html', logged_in=logged_in)
+    check_in_out_form = CheckInOutForm()
+
+    print("res func ")
+
+    if check_in_out_form.validate_on_submit():
+
+        #if check in box checked
+        if check_in_out_form.in_out.data:   
+        
+            # stores set name entered by user
+            item = check_in_out_form.item.data  
+            # stores quantity requested by user
+            quantity = int(check_in_out_form.quantity.data) 
+            
+            set = hardware_manager.find_one({"Name": item})
+            availability = set["Availability"]
+
+            # if avail. + quantity to be returned exceeds max capacity
+            if (set["Capacity"] < availability + quantity) or quantity < 1:
+                error = "invalid quantity"
+                flash(error)
+            # set has space for items being returned
+            else:
+                availability += quantity
+
+            # put updated set information into MongoDB database
+            set["Availability"] = availability
+            hardware_manager.update_one({'Name':set["Name"]}, {"$set": set}, upsert=False)
+
+            #refresh page and reset fields  
+            return redirect(url_for('resources'))
+
+        else:
+            # stores set name entered by user
+            item = check_in_out_form.item.data
+            # stores quantity requested by user
+            quantity = int(check_in_out_form.quantity.data)
+            
+            set = hardware_manager.find_one({"Name": item})
+            availability = set["Availability"]
+
+            # if set has less avail. than quantity requested
+            if availability < quantity or quantity < 1:
+                error = "invalid quantity"
+                flash(error)
+            # set has quantity requested or more
+            else:
+                availability -= quantity
+
+            # put updated set information into MongoDB database
+            set["Availability"] = availability
+            hardware_manager.update_one({'Name':set["Name"]}, {"$set": set}, upsert=False)
+
+            #refresh page and reset fields  
+            return redirect(url_for('resources'))
+
+    return render_template('resources.html', logged_in=logged_in, hardware_manager = hardware_manager, check_in_out_form = check_in_out_form)
 
 
 @app.route('/projects')

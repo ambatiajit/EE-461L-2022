@@ -1,20 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block content %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Data Access</title>
-</head>
-
-<!-- A display area (text) which shows a bulleted list of datasets available
-on the public dataset.  -->
-
-<body>
-
+{% if not logged_in: %}
+<h1>Please login before accessing datasets</h1>
+<img src="static/images/please_login.png" alt="hello-world" class="user_img">
+{% else: %}
 <h1> Public Datasets </h1>
 
 <a href="https://genesys-lab.org" target="_blank">
-    <img src="/static/images/genesys-img.png" alt="genesys-lab.org" style="width: 800px">
+    <img src="/static/images/genesys-img.png" alt="genesys-lab.org" style="width: 800px" class="user_img">
 </a>
 
 <h2> Genesys Labs </h2>
@@ -248,7 +242,7 @@ on the public dataset.  -->
 
 
 <a href="https://physionet.org" target="_blank">
-    <img src="/static/images/physio-net.png" alt="physionet" style="width: 800px">
+    <img src="/static/images/physio-net.png" alt="physionet" style="width: 800px" class="user_img">
 </a>
 
 <h2> Genesys Labs </h2>
@@ -310,7 +304,7 @@ on the public dataset.  -->
         </button>
     </li>
 </ul>
+{% endif %}
 
 
-</body>
-</html>
+{% endblock %}

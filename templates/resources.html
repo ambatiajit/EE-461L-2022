@@ -10,10 +10,6 @@
 {% else: %}
 
 <h1>Resources</h1>
-
-<img src="static/images/resources.png" alt="Resources" class="user_img">
-<br>
-
 <br>
 
 {% with messages = get_flashed_messages() %}
@@ -24,33 +20,55 @@
     {% endif %}
 {% endwith %}
 
-<!-- Can store images associated with HWSets in db later -->
-<!-- Fetching and displaying should be simple -->
-{%for document in hardware_manager.find({}):%}
-    <div class="card-group"></div>
-        <div class="card">
-            <h3 class="card-title">{{document["Name"]}}</h3>
-            <p class="card-text">Capacity: {{document["Capacity"]}}</p>
-            <p class="card-text">Availability: {{document["Availability"]}}</p>
+<!-- Display how much hardware user has for each HW set -->
+<br>
+<h2 style="text-align: center" class="displaying-resources">Your resources</h2>
+<h3 style="text-align: center">HWSet1: {{ hwset1 }}</h3>
+<h3 style="text-align: center">HWSet2: {{ hwset2 }}</h3>
 
-        </div>
+<br><br>
+
+<div class="row">
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">HWSet1</h5>
+        <p class="card-text">Check out/check in hardware from HWSet1</p>
+        <p class="card-text">Capacity: {{ hardware_manager.find_one({'Name': 'HWSet1'})['Capacity'] }}</p>
+        <p class="card-text">Availability: {{ hardware_manager.find_one({'Name': 'HWSet1'})['Availability'] }}</p>
+        <img src="static/images/hwset1.jpeg" alt="Login" class="user_img">
+      </div>
     </div>
-{%endfor%}
+  </div>
+  <div class="col-sm-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">HWSet2</h5>
+        <p class="card-text">Check out/check in hardware from HWSet2</p>
+        <p class="card-text">Capacity: {{ hardware_manager.find_one({'Name': 'HWSet2'})['Capacity'] }}</p>
+        <p class="card-text">Availability: {{ hardware_manager.find_one({'Name': 'HWSet2'})['Availability'] }}</p>
+        <img src="static/images/hwset2.jpeg" alt="Login" class="user_img">
+      </div>
+    </div>
+  </div>
+</div>
 
-<form action="{{ url_for('resources') }}", method="post", class="check_out_form">
+<br><br>
+
+<form action="{{ url_for('resources') }}", method="post", class="check_out_form", style="text-align:center">
     <h2>Check In/Out Sets: </h2>
     <p>{{ check_in_out_form.hidden_tag() }}</p>
     <p>
-        Checking in?:  
+        Checking in?:
         {{ check_in_out_form.in_out() }}
         (Leave un-checked to check out)
     </p>
     <p>
-        Set Name:  
+        Set Name:
         {{check_in_out_form.item(size=32, placeholder='set name')}}
     </p>
     <p>
-        Quantity:  
+        Quantity:
         {{check_in_out_form.quantity(size=32, placeholder='quantity')}}
     </p>
     <p> {{ check_in_out_form.submit() }} </p>

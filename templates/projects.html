@@ -1,13 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-
-
 {% if not logged_in: %}
-<h1>Please login before accessing projects</h1>
-<img src="static/images/please_login.png" alt="hello-world" class="user_img">
+    <div style="text-align:center">
+    <h1>Please login before accessing projects</h1>
+    <img src="static/images/please_login.png" alt="hello-world" class="user_img">
+    <p></p>
+    <a href="./login.html?_ijt=ohgqatluo21eloes0or7vgl7ra&_ij_reload=RELOAD_ON_SAVE">
+       <button>Login</button>
+    </a>
+    </div>
 {% else: %}
-<h1>Projects</h1>
-<!--Continue HTML here -->
+    <div style="text-align:center">
+    <h1>Projects</h1>
+    <button>Create a New Project</button>
+    <p></p>
+    <button>Use an Existing Project</button>
+    </div>
+    <!--Pop up window for creating and using existing project here>
+
 {% endif %}
 
 

@@ -4,8 +4,12 @@ h1 {
     margin-top: 30px;
 }
 
-h3 {
+h3, h2 {
     color: #2F4F4F;
+}
+
+.displaying-resources {
+    text-decoration-line: underline;
 }
 
 body {

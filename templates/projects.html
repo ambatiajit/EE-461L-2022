@@ -1,22 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
+
 {% if not logged_in: %}
     <div style="text-align:center">
     <h1>Please login before accessing projects</h1>
     <img src="static/images/please_login.png" alt="hello-world" class="user_img">
     <p></p>
-    <a href="./login.html?_ijt=ohgqatluo21eloes0or7vgl7ra&_ij_reload=RELOAD_ON_SAVE">
+    <a href="./login">
        <button>Login</button>
     </a>
     </div>
 {% else: %}
+    <script>
+        function openCreateProject(){
+            document.getElementById("useForm").style.display = "none";
+            document.getElementById("createForm").style.display = "block";
+        }
+
+        function closeCreateProject(){
+            document.getElementById("createForm").style.display = "none";
+        }
+
+        function openUseProject(){
+            document.getElementById("createForm").style.display = "none";
+            document.getElementById("useForm").style.display = "block";
+        }
+
+        function closeUseProject(){
+            document.getElementById("useForm").style.display = "none";
+        }
+
+    </script>
     <div style="text-align:center">
     <h1>Projects</h1>
-    <button>Create a New Project</button>
+    <button onclick="openCreateProject()" id = "open">Create a New Project</button>
     <p></p>
-    <button>Use an Existing Project</button>
+    <button onclick="openUseProject()" id = "open1">Use an Existing Project</button>
+    <p></p>
     </div>
-    <!--Pop up window for creating and using existing project here>
+{#    <!--Pop up window for creating and using existing project here>#}
+    <div class="form-popup" id = "createForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">
+        <form class = "form-container" id = "createProjectForm">
+            <input type = "text"> Project Name</input>
+            <input type = "text"> Project Description</input>
+            <input type = "text"> Project ID</input>
+            <button onclick="closeCreateProject()" id = "close"> Close </button>
+        </form>
+    </div>
+
+    <div class="form-popup" id = "useForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">
+        <form class = "form-container" id = "useProjectForm">
+            <input type = "text"> Project ID</input>
+            <button onclick="closeUseProject()" id = "close"> Close </button>
+        </form>
+    </div>
 
 {% endif %}
 

@@ -41,28 +41,29 @@
 
     <br>
 
+    <!-- Show all the projects that the user can "join" -->
     {% with projects = project_manager.find() %}
         {% if projects %}
             {% for project in projects %}
-                <p>{{ project }}</p>
+                <p style="text-align: center;">{{ project }}</p>
             {% endfor %}
         {% endif %}
     {% endwith %}
-<!--    &lt;!&ndash;Pop up window for creating and using existing project here> -->
 
+<!--    &lt;!&ndash;Pop up window for creating and using existing project here> -->
     <div class="form-popup" id = "createForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">
         <form class = "form-container" id = "createProjectForm">
             <input type = "text"> Project Name</input>
             <input type = "text"> Project Description</input>
             <input type = "text"> Project ID</input>
-            <button onclick="closeCreateProject()" id="close"> Close </button>
+            <button onclick="closeCreateProject()" id="close1"> Close </button>
         </form>
     </div>
 
     <div class="form-popup" id = "useForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">
         <form class = "form-container" id = "useProjectForm">
             <input type = "text"> Project ID</input>
-            <button onclick="closeUseProject()" id="close"> Close </button>
+            <button onclick="closeUseProject()" id="close2"> Close </button>
         </form>
     </div>
 

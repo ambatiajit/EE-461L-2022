@@ -10,6 +10,7 @@
 {% else: %}
 
 <h1>Resources</h1>
+
 <br>
 
 {% with messages = get_flashed_messages() %}
@@ -22,9 +23,31 @@
 
 <!-- Display how much hardware user has for each HW set -->
 <br>
-<h2 style="text-align: center" class="displaying-resources">Your resources</h2>
-<h3 style="text-align: center">HWSet1: {{ hwset1 }}</h3>
-<h3 style="text-align: center">HWSet2: {{ hwset2 }}</h3>
+<h2 style="text-align: center" class="displaying-resources">Current State of Your Projects</h2>
+<!--<h3 style="text-align: center">HWSet1: {{ hwset1 }}</h3>-->
+<!--<h3 style="text-align: center">HWSet2: {{ hwset2 }}</h3>-->
+
+<!--{% with projects = project_manager.find() %}-->
+<!--        {% if projects %}-->
+<!--            {% for project in projects %}-->
+<!--                <h3 style="text-align: center;">{{ project['Name'] }} ({{ project['ID'] }}):</h3>-->
+<!--                <p style="text-align: center">HWSet1: {{ project['HW'][0] }}, HWSet2: {{ project['HW'][1] }}</p>-->
+<!--&lt;!&ndash;                <p style="text-align: center">HWSet2: {{ project['HW'][1] }}</p>&ndash;&gt;-->
+<!--            {% endfor %}-->
+<!--        {% endif %}-->
+<!--{% endwith %}-->
+
+{% if user_projects %}              <!-- user is logged in to at least 1 project -->
+    {% for project in user_projects %}
+        {% with curr_project = project_manager.find_one({'ID': project}) %}
+            <h3 style="text-align: center;">{{ curr_project['Name'] }} ({{ curr_project['ID'] }}):</h3>
+            <p style="text-align: center">HWSet1: {{ curr_project['HW'][0] }}, HWSet2: {{ curr_project['HW'][1] }}</p>
+        {% endwith %}
+    {% endfor %}
+
+{% else %}                          <!-- user is not logged into any projects -->
+    <p style="text-align: center">You are not logged into any projects. Join a project now</p>
+{% endif %}
 
 <br><br>
 
@@ -58,19 +81,23 @@
 <form action="{{ url_for('resources') }}", method="post", class="check_out_form", style="text-align:center">
     <h2>Check In/Out Sets: </h2>
     <p>{{ check_in_out_form.hidden_tag() }}</p>
-    <p>
+    <p>                         <!-- checking in or checking out button -->
         Checking in?:
         {{ check_in_out_form.in_out() }}
         (Leave un-checked to check out)
     </p>
-    <p>
+    <p>                         <!-- name of HW set -->
         Set Name:
         {{check_in_out_form.item(size=32, placeholder='set name')}}
     </p>
-    <p>
+    <p>                         <!-- project ID -->
+        Project ID:
+        {{check_in_out_form.project(size=32, placeholder='project ID')}}
+    </p>
+    <p>                         <!-- quantity to check in/out -->
         Quantity:
         {{check_in_out_form.quantity(size=32, placeholder='quantity')}}
-    </p>
+    </p>                         <!-- submit button -->
     <p> {{ check_in_out_form.submit() }} </p>
 </form>
 

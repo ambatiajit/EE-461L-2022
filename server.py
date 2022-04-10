@@ -4,6 +4,7 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired
 from pymongo import MongoClient
 import certifi
+import sys
 import pytest
 
 NUM_POSITIONS = 3  # number of positions to shift characters in a user's password

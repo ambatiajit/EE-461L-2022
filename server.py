@@ -23,6 +23,11 @@ user_manager = projectdb['Users']
 project_manager = projectdb['Projects']
 hardware_manager = projectdb['HWSet']
 
+# project_ids = []                        # contains avaialable project ids (for resources section)
+# projects = project_manager.find()
+# for project in projects:
+#     project_ids.append(project['ID'])
+
 
 class LoginForm(FlaskForm):
     userid = StringField(label='userID', validators=[DataRequired()])
@@ -41,6 +46,7 @@ class RegisterForm(FlaskForm):
 class CheckInOutForm(FlaskForm):
     item = StringField(label='Item name', validators=[DataRequired()])
     quantity = StringField(label='Quantity', validators=[DataRequired()])
+    project = StringField(label='ProjectID', validators=[DataRequired()])
     in_out = BooleanField(label="In or out")
     submit = SubmitField(label='Submit')
 
@@ -140,22 +146,25 @@ def resources():
     set_names = ["HWSet1", "HWSet2"]
     logged_in = is_logged_in()
 
-    user_hwset1 = 0
-    user_hwset2 = 0
-    if logged_in:
-        user_data = user_manager.find_one({"userID": session['userID']})
-        user_hwset1 = user_data['resources']['HWSet1']
-        user_hwset2 = user_data['resources']['HWSet2']
+    #                 user_data = user_manager.find_one({"userID": session['userID']})
+    user_projects = []
+    if logged_in:               # need to store user's projects
+        user_projects = user_manager.find_one({'userID': session['userID']})['projects']
 
     check_in_out_form = CheckInOutForm()
 
-    if check_in_out_form.validate_on_submit():
+    if check_in_out_form.is_submitted() and logged_in:
         set_name = check_in_out_form.item.data
+        project_id = check_in_out_form.project.data
 
-        if set_name not in set_names:       # user enters something other than 'HWSet1' or 'HWSet2'
+        if set_name not in set_names:       # user enters something other than 'HWSet1' or 'HWSet2' c
             error = "That hardware set does not exist."
             flash(error)
-        else:           # checking in hardware
+        elif project_id not in user_projects:
+            error = "That project either does not exist or your are not logged in to that project."
+            flash(error)
+        else:           # checking in/out hardware to project with id of project_id
+            curr_project = project_manager.find_one({'ID': project_id})     # current project to check in/out HW from
             # if check in box checked
             if check_in_out_form.in_out.data:
                 # stores set name entered by user
@@ -163,27 +172,44 @@ def resources():
                 # stores quantity requested by user
                 quantity = int(check_in_out_form.quantity.data)
 
-                set = hardware_manager.find_one({"Name": item})
-                availability = set["Availability"]
-                user_data = user_manager.find_one({"userID": session['userID']})
+                hwset = hardware_manager.find_one({"Name": item})
+                availability = hwset["Availability"]
+
+                amount_in_project = 0
+                if item == 'HWSet1':
+                    amount_in_project = curr_project['HW'][0]
+                elif item == 'HWSet2':
+                    amount_in_project = curr_project['HW'][1]
+
+                # user_data = user_manager.find_one({"userID": session['userID']})
 
                 # if avail. + quantity to be returned exceeds max capacity
-                if (set["Capacity"] < availability + quantity) or quantity < 1:
+                if (hwset["Capacity"] < availability + quantity) or quantity < 1:
                     error = "Invalid quantity."
                     flash(error)
-                elif (user_data['resources'][set_name] < quantity):   # check if user has enough to check in qty
-                    error = f"You only have {user_data['resources'][set_name]} hardware."
+                elif amount_in_project < quantity:   # check if user has enough to check in qty
+                    # error = f"You only have {amount_in_project} hardware."
+                    error = f"You don't have enough hardware to check in."
                     flash(error)
                 # set has space for items being returned
                 else:
                     availability += quantity
-                    user_data['resources'][set_name] -= quantity
-                    user_manager.update_one({'userID': session['userID']}, {'$set': user_data})
+                    amount_in_project -= quantity
+
+                    if item == 'HWSet1':
+                        curr_project['HW'][0] = amount_in_project
+                    elif item == 'HWSet2':
+                        curr_project['HW'][1] = amount_in_project
+
+                    project_manager.update_one({'ID': project_id}, {'$set': curr_project})
+
+                    # user_data['resources'][set_name] -= quantity
+                    # user_manager.update_one({'userID': session['userID']}, {'$set': user_data})
 
                 # put updated set information into MongoDB database & update user's resources
-                set["Availability"] = availability
+                hwset["Availability"] = availability
                 # user resources -= qty
-                hardware_manager.update_one({'Name': set["Name"]}, {"$set": set}, upsert=False)
+                hardware_manager.update_one({'Name': hwset["Name"]}, {"$set": hwset}, upsert=False)
 
                 # refresh page and reset fields
                 return redirect(url_for('resources'))
@@ -194,8 +220,14 @@ def resources():
                 # stores quantity requested by user
                 quantity = int(check_in_out_form.quantity.data)
 
-                set = hardware_manager.find_one({"Name": item})
-                availability = set["Availability"]
+                hwset = hardware_manager.find_one({"Name": item})
+                availability = hwset["Availability"]
+
+                amount_in_project = 0
+                if item == 'HWSet1':
+                    amount_in_project = curr_project['HW'][0]
+                elif item == 'HWSet2':
+                    amount_in_project = curr_project['HW'][1]
 
                 check_out_quantity = quantity       # only updated if set has less availability than quantity requested
 
@@ -211,25 +243,37 @@ def resources():
                     availability -= quantity
 
                 # put updated set information into MongoDB database & update user's resources
-                set["Availability"] = availability
-                hardware_manager.update_one({'Name': set["Name"]}, {"$set": set}, upsert=False)
+                hwset["Availability"] = availability
+                hardware_manager.update_one({'Name': hwset["Name"]}, {"$set": hwset}, upsert=False)
 
-                user_data = user_manager.find_one({"userID": session['userID']})
-                user_data['resources'][set_name] += check_out_quantity
-                user_manager.update_one({'userID': session['userID']}, {'$set': user_data})
+                if item == 'HWSet1':
+                    curr_project['HW'][0] += check_out_quantity
+                elif item == 'HWSet2':
+                    curr_project['HW'][1] += check_out_quantity
+                project_manager.update_one({'ID': project_id}, {'$set': curr_project})
+
+                # user_data = user_manager.find_one({"userID": session['userID']})
+                # user_data['resources'][set_name] += check_out_quantity
+                # user_manager.update_one({'userID': session['userID']}, {'$set': user_data})
 
                 # refresh page and reset fields
                 return redirect(url_for('resources'))
 
     return render_template('resources.html', logged_in=logged_in, hardware_manager=hardware_manager,
-                           check_in_out_form=check_in_out_form, hwset1=user_hwset1, hwset2=user_hwset2)
-
+                           project_manager=project_manager, check_in_out_form=check_in_out_form, user_projects=user_projects)
+    # return render_template('resources.html', logged_in=logged_in, hardware_manager=hardware_manager,
+    #                        project_manager=project_manager, check_in_out_form=check_in_out_form, hwset1=user_hwset1,
+    #                        hwset2=user_hwset2)
 
 @app.route('/projects')
 def projects():
     logged_in = is_logged_in()
 
-    return render_template('projects.html', logged_in=logged_in)
+    # ** make sure to append the projectID of the newly created project to project_ids[] **
+
+    # also make sure to add the project under User's "projects" array
+
+    return render_template('projects.html', logged_in=logged_in, project_manager=project_manager)
 
 
 @app.route('/data_access')

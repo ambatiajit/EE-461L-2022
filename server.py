@@ -7,6 +7,9 @@ import certifi
 import sys
 import pytest
 
+from IPython.display import display
+import wfdb
+
 NUM_POSITIONS = 3  # number of positions to shift characters in a user's password
 DATABASE_PASSWORD = "kltlFKZqaaj4jZCX"
 
@@ -280,7 +283,13 @@ def projects():
 def data_access():
     logged_in = is_logged_in()
 
-    return render_template('data_access.html', logged_in=logged_in)
+    # Read a WFDB record using the 'rdrecord' function into a wfdb.Record object.
+    record = wfdb.rdrecord('af-termination-challenge-database-1.0.0/learning-set/n01')
+
+    display(record.__dict__)
+    dict = record.__dict__
+
+    return render_template('data_access.html', logged_in=logged_in, dict=dict)
 
 
 @app.route('/logout')

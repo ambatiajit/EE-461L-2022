@@ -268,13 +268,30 @@ def resources():
     #                        project_manager=project_manager, check_in_out_form=check_in_out_form, hwset1=user_hwset1,
     #                        hwset2=user_hwset2)
 
-@app.route('/projects')
+
+@app.route('/projects', methods=['GET', 'POST'])
 def projects():
     logged_in = is_logged_in()
+    if request == 'POST':
+        name = request.form.get('Project Name')
+        projectID = request.form.get('Project ID')
+        desc = request.form.get('Project Description')
 
-    # ** make sure to append the projectID of the newly created project to project_ids[] **
+        project = {
+            'Name': name,
+            'ID': projectID,
+            'Description': desc,
+            'HW': [0, 0]
+        }
 
-    # also make sure to add the project under User's "projects" array
+        # ** make sure to append the projectID of the newly created project to project_ids[] **
+        project_manager.insert_one(project)
+
+        # also make sure to add the project under User's "projects" array
+        user_manager.update_one({
+            'userID': session['userID'],
+            '$push': {'projects': project}
+        })
 
     return render_template('projects.html', logged_in=logged_in, project_manager=project_manager)
 

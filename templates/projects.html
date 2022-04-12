@@ -2,44 +2,43 @@
 {% block content %}
 
 {% if not logged_in: %}
-    <div style="text-align:center">
-    <h1>Please login before accessing projects</h1>
-    <img src="static/images/please_login.png" alt="hello-world" class="user_img">
-    <p></p>
-    <a href="./login">
-       <button>Login</button>
-    </a>
-    </div>
+
+<h1>Please login before accessing projects</h1>
+<img src="static/images/please_login.png" alt="hello-world" class="user_img">
+
 {% else: %}
-    <script>
-        function openCreateProject(){
-            document.getElementById("useForm").style.display = "none";
-            document.getElementById("createForm").style.display = "block";
-        }
 
-        function closeCreateProject(){
-            document.getElementById("createForm").style.display = "none";
-        }
+<h1>Projects</h1>
 
-        function openUseProject(){
-            document.getElementById("createForm").style.display = "none";
-            document.getElementById("useForm").style.display = "block";
-        }
+<!--    <script>-->
+<!--        function openCreateProject(){-->
+<!--            document.getElementById("joinForm").style.display = "none";-->
+<!--            document.getElementById("createForm").style.display = "block";-->
+<!--        }-->
 
-        function closeUseProject(){
-            document.getElementById("useForm").style.display = "none";
-        }
+<!--        function closeCreateProject(){-->
+<!--            document.getElementById("createForm").style.display = "none";-->
+<!--        }-->
 
-    </script>
-    <div style="text-align:center">
-        <h1>Projects</h1>
-        <span>
-            <button onclick="openCreateProject()" id = "open">Create a New Project</button>
-            <button onclick="openUseProject()" id = "open1">Use an Existing Project</button>
-        </span>
-    </div>
+<!--        function openJoinProject(){-->
+<!--            document.getElementById("createForm").style.display = "none";-->
+<!--            document.getElementById("joinForm").style.display = "block";-->
+<!--        }-->
 
-    <br>
+<!--        function closeJoinProject(){-->
+<!--            document.getElementById("joinForm").style.display = "none";-->
+<!--        }-->
+
+<!--    </script>-->
+<!--    <div style="text-align:center">-->
+<!--        <br>-->
+<!--        <span>-->
+<!--            <button onclick="openCreateProject()" id = "open">Create a New Project</button>-->
+<!--            <button onclick="openJoinProject()" id = "open1">Join an Existing Project</button>-->
+<!--        </span>-->
+<!--    </div>-->
+
+    <br><br>
 
     <!-- Show all the projects that the user can "join" -->
     {% with projects = project_manager.find() %}
@@ -68,30 +67,69 @@
                     </tr>
                 {% endfor %}
             </table>
-            <br>
         {% endif %}
     {% endwith %}
 
-<!--    &lt;!&ndash;Pop up window for creating and using existing project here> -->
-    <div class="form-popup" id = "createForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">
-        <form class = "form-container" id = "createProjectForm" method="post">
-            <p>Project Name <input type = "text" name = "Project Name"></p>
-            <p>Project Description <input type = "text" name = "Project Description"></p>
-            <p>Project ID <input type = "text" name = "Project ID"></p>
-            <button id="create"> Create </button>
-        </form>
-        <br>
-        <button onclick="closeCreateProject()" id="close1"> Close </button>
-    </div>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p class="error_message"><strong>{{ message }}</strong></p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
-    <div class="form-popup" id = "useForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">
-        <form class = "form-container" id = "useProjectForm" method="post">
-            <p>Project ID <input type = "text"></p>
-            <button id = "submit"> Submit</button>
+<br><br>
+
+<!-- create_new_project_form=create_new_project_form, join_existing_project_form=join_existing_project_form) -->
+
+<div class="row projects_form">
+  <div class="col-sm-6">
+    <div class="card text-white bg-dark">
+      <div class="card-body">
+        <form action="{{ url_for('projects') }}" method="post">
+            <h5 class="card-title">Create a New Project</h5>
+            <p> {{create_new_project_form.project_name(size=32, placeholder='project name')}} <br></p>
+            <p> {{create_new_project_form.project_description(size=32, placeholder='project description')}} <br></p>
+            <p> {{create_new_project_form.project_id(size=32, placeholder='project id')}} <br></p>
+            <p> {{ create_new_project_form.submit() }} </p>
         </form>
-        <br>
-        <button onclick="closeUseProject()" id="close2"> Close </button>
+      </div>
     </div>
+  </div>
+  <div class="col-sm-6">
+    <div class="card text-white bg-dark">
+      <div class="card-body">
+        <form action="{{ url_for('projects') }}" method="post">
+            <h5 class="card-title">Join an Existing Project</h5>
+            <p> {{join_existing_project_form.id(size=32, placeholder='project id')}} <br></p>
+            <br><br><br><br>
+            <p> {{ join_existing_project_form.submit() }} </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--    &lt;!&ndash;Pop up window for creating and using existing project here> -->
+<!--    <div class="form-popup" id="createForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">-->
+<!--        <form class = "form-container" id = "createProjectForm" method="post">-->
+<!--            <p>Project Name <input type = "text" name = "Project Name"></p>-->
+<!--            <p>Project Description <input type = "text" name = "Project Description"></p>-->
+<!--            <p>Project ID <input type = "text" name = "Project ID"></p>-->
+<!--            <button id="create"> Create </button>-->
+<!--        </form>-->
+<!--        <br>-->
+<!--        <button onclick="closeCreateProject()" id="close1"> Close </button>-->
+<!--    </div>-->
+
+<!--    <div class="form-popup" id="joinForm" style="display: None; margin-top: 50px; text-align: center; color: #2F4F4F;">-->
+<!--        <form class = "form-container" id = "joinProjectForm" method="post">-->
+<!--            <p>Project ID <input type = "text"></p>-->
+<!--            <button id = "submit"> Submit</button>-->
+<!--        </form>-->
+<!--        <br>-->
+<!--        <button onclick="closeJoinProject()" id="close2"> Close </button>-->
+<!--    </div>-->
 
 {% endif %}
 

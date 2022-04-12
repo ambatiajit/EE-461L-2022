@@ -26,11 +26,6 @@ user_manager = projectdb['Users']
 project_manager = projectdb['Projects']
 hardware_manager = projectdb['HWSet']
 
-# project_ids = []                        # contains avaialable project ids (for resources section)
-# projects = project_manager.find()
-# for project in projects:
-#     project_ids.append(project['ID'])
-
 
 class LoginForm(FlaskForm):
     userid = StringField(label='userID', validators=[DataRequired()])
@@ -52,6 +47,18 @@ class CheckInOutForm(FlaskForm):
     project = StringField(label='ProjectID', validators=[DataRequired()])
     in_out = BooleanField(label="In or out")
     submit = SubmitField(label='Submit')
+
+
+class CreateNewProjectForm(FlaskForm):
+    project_name = StringField(label='Project Name', validators=[DataRequired()])
+    project_description = StringField(label='Project Description', validators=[DataRequired()])
+    project_id = StringField(label='Project ID', validators=[DataRequired()])
+    submit = SubmitField(label='Create')
+
+
+class JoinExistingProjectForm(FlaskForm):
+    id = StringField(label='Project ID', validators=[DataRequired()])
+    submit = SubmitField(label='Join')
 
 
 def custom_encrypt(plain_text, direction):
@@ -134,7 +141,6 @@ def register():
                 'last_name': lname,
                 'userID': userid,
                 'encr_pwd': encrypted_password,  # only store encrypted password in database
-                'resources': {'HWSet1': 0, 'HWSet2': 0},  # initially has 0 resources
                 'projects': []}  # array that contains projectIDs, initially empty
 
         user_manager.insert_one(post)
@@ -272,28 +278,72 @@ def resources():
 @app.route('/projects', methods=['GET', 'POST'])
 def projects():
     logged_in = is_logged_in()
-    if request == 'POST':
-        name = request.form.get('Project Name')
-        projectID = request.form.get('Project ID')
-        desc = request.form.get('Project Description')
+    create_new_project_form = CreateNewProjectForm()
+    join_existing_project_form = JoinExistingProjectForm()
 
-        project = {
-            'Name': name,
-            'ID': projectID,
-            'Description': desc,
-            'HW': [0, 0]
-        }
+    all_projects = []
+    if logged_in:  # need to store user's projects
+        projects = project_manager.find({})
+        for project in projects:
+            all_projects.append(project['ID'])
 
-        # ** make sure to append the projectID of the newly created project to project_ids[] **
-        project_manager.insert_one(project)
+    if request.method == "POST":
+        if not create_new_project_form.project_name.data:    # user is joining a project --> check for valid project id
+            requested_project_id = join_existing_project_form.id.data
+            if requested_project_id not in all_projects:
+                error = "There is no such project with the project ID you entered."
+                flash(error)
+                return redirect(url_for('projects'))
+            else:               # join the user to the requested project (if not already joined)
+                current_user_projects = user_manager.find_one({'userID': session['userID']})['projects']
+                if requested_project_id in current_user_projects:      # user is already joined to the requested project
+                    error = "You have already joined the requested project."
+                    flash(error)
+                    return redirect(url_for('projects'))
+                else:           # add project to user's projects
+                    current_user = user_manager.find_one({'userID': session['userID']})
+                    # print('current projects:', current_user['projects'])
+                    current_user_projects.append(requested_project_id)
+                    # print("updated user's projects:", current_user_projects)
 
-        # also make sure to add the project under User's "projects" array
-        user_manager.update_one({
-            'userID': session['userID'],
-            '$push': {'projects': project}
-        })
+                    current_user['projects'] = current_user_projects
+                    user_manager.update_one({'userID': session['userID']}, {'$set': current_user})
+                    success = f"You have successfully joined the project with a projectID of {requested_project_id}!"
+                    flash(success)
+                    return redirect(url_for('projects'))
 
-    return render_template('projects.html', logged_in=logged_in, project_manager=project_manager)
+        else:       # user is creating a new project --> create new project + automatically join user to that project
+            # insert new project into project_manager
+            new_project_name = create_new_project_form.project_name.data
+            new_project_id = create_new_project_form.project_id.data
+            new_project_description = create_new_project_form.project_description.data
+
+            # first check if new_project_id is an existing ID (ID's must be unique)
+            if new_project_id in all_projects:
+                error = "That project ID already exists, please enter a new one."
+                flash(error)
+                return redirect(url_for('projects'))
+            else:
+                new_project = {
+                    'Name': new_project_name,
+                    'ID': new_project_id,
+                    'Description': new_project_description,
+                    'HW': [0, 0]
+                }
+                project_manager.insert_one(new_project)
+
+                # join the current user to the created project
+                current_user = user_manager.find_one({'userID': session['userID']})
+                current_user_projects = current_user['projects']
+
+                current_user_projects.append(new_project_id)
+                current_user['projects'] = current_user_projects
+                user_manager.update_one({'userID': session['userID']}, {'$set': current_user})
+
+                return redirect(url_for('projects'))
+
+    return render_template('projects.html', logged_in=logged_in, project_manager=project_manager,
+                           create_new_project_form=create_new_project_form, join_existing_project_form=join_existing_project_form)
 
 
 @app.route('/data_access')

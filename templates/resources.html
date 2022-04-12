@@ -46,7 +46,7 @@
     {% endfor %}
 
 {% else %}                          <!-- user is not logged into any projects -->
-    <p style="text-align: center">You are not logged into any projects. Join a project now</p>
+    <p style="text-align: center; color: #2F4F4F"> You are not logged into any projects. <a href="{{ url_for('projects') }}" style="color: #FF4500">Join/Create a project now.</a></p>
 {% endif %}
 
 <br><br>
